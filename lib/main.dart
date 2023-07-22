@@ -4,13 +4,15 @@ import 'package:location_share/provider/user_provider.dart';
 import 'package:location_share/screen/login_page.dart';
 import 'package:location_share/screen/main_page.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   KakaoSdk.init(
-      nativeAppKey: '1e040cb0e9233148812f4906cbbe0132',
-      javaScriptAppKey: '32a388318cdce5c3b61fe63c14e40c06');
-  // NaverMapSdk.instance.initialize(clientId: 'g33oc99jt8');
+      nativeAppKey: dotenv.env['KAKAO_NATIVE_KEY'],
+      javaScriptAppKey: dotenv.env['KAKAO_JAVASCRIPT_KEY']);
+  // NaverMapSdk.instance.initialize(clientId: dotenv.env['NAVER_CLIENT_ID']);
   runApp(
     MultiProvider(
       providers: [

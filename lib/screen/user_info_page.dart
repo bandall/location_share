@@ -13,9 +13,10 @@ class UserInfoPage extends StatefulWidget {
   _UserInfoPageState createState() => _UserInfoPageState();
 }
 
-class _UserInfoPageState extends State<UserInfoPage> {
-  String username = '홍길동';
-  String email = '홍길동@example.com';
+class _UserInfoPageState extends State<UserInfoPage>
+    with AutomaticKeepAliveClientMixin {
+  String username = '';
+  String email = '';
   String userProfileImgUrl = 'https://via.placeholder.com/150';
 
   void onLogoutPressed(UserProvider userProvider) async {
@@ -165,6 +166,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint("user_info_init");
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       setState(() {
@@ -346,4 +348,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }

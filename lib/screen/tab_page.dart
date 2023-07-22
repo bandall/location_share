@@ -16,18 +16,19 @@ class TabPage extends StatefulWidget {
   _TabPageState createState() => _TabPageState();
 }
 
-class _TabPageState extends State<TabPage> {
-  int _currentIndex = 0;
-
-  final List<Widget> _pages = const [
-    HomePage(),
-    MainServicePage(),
-    UserInfoPage(),
+class _TabPageState extends State<TabPage> with SingleTickerProviderStateMixin {
+  final List<Tab> _tabs = const [
+    Tab(icon: Icon(Icons.home), text: 'Home'),
+    Tab(icon: Icon(Icons.account_circle), text: 'Main Service'),
+    Tab(icon: Icon(Icons.person), text: 'User Info'),
   ];
+
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       try {
@@ -44,28 +45,30 @@ class _TabPageState extends State<TabPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Main Service',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'User Info',
-          ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          HomePage(),
+          MainServicePage(),
+          UserInfoPage(),
         ],
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade400,
+              width: 1.0,
+            ),
+          ),
+        ),
+        child: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.transparent,
+          labelColor: Theme.of(context).primaryColor,
+          unselectedLabelColor: Colors.grey.shade400,
+          tabs: _tabs,
+        ),
       ),
     );
   }

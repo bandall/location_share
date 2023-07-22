@@ -12,7 +12,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
   void onRefreshPressed(UserProvider userProvider) async {
     await LoginApi().refreshTokens(userProvider);
   }
@@ -124,4 +125,8 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
 }
