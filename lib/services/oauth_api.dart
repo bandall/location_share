@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:location_share/exceptions/custom_exception.dart';
 
 import '../models/jwt_Token_Info.dart';
 import '../provider/user_provider.dart';
 import 'login_api.dart';
 
 class OAuthApi {
-  Future<bool> signInWithKakao(UserProvider userProvider) async {
+  Future<bool> signInWithKakao(
+      BuildContext context, UserProvider userProvider) async {
     final bool isInstalled = await isKakaoTalkInstalled();
     OAuthToken? token;
 
@@ -21,7 +23,7 @@ class OAuthApi {
 
     try {
       final JwtTokenInfo tokenInfo =
-          await LoginApi().kakaoSocialLogin(token.accessToken);
+          await LoginApi().kakaoSocialLogin(context, token.accessToken);
 
       Map<String, dynamic> accessTokenInfo =
           JwtDecoder.decode(tokenInfo.accessToken!);
@@ -40,7 +42,10 @@ class OAuthApi {
           tokenInfo.refreshToken,
           false);
       return true;
+    } on EmailNotVerified {
+      return true;
     } catch (e) {
+      debugPrint(e.toString());
       return false;
     }
   }

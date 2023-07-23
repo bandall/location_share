@@ -10,7 +10,7 @@ class UserInfoPage extends StatefulWidget {
   const UserInfoPage({Key? key}) : super(key: key);
 
   @override
-  _UserInfoPageState createState() => _UserInfoPageState();
+  State<UserInfoPage> createState() => _UserInfoPageState();
 }
 
 class _UserInfoPageState extends State<UserInfoPage>
@@ -179,6 +179,7 @@ class _UserInfoPageState extends State<UserInfoPage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
       appBar: const CustomAppBar(title: 'User Information'),

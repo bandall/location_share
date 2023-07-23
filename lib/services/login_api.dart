@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:location_share/exceptions/custom_exception.dart';
 import 'package:location_share/models/api_response.dart';
 import 'package:location_share/models/jwt_Token_Info.dart';
 import 'package:location_share/models/login_expire_error.dart';
+import 'package:location_share/screen/auth_page.dart';
 
 import '../provider/user_provider.dart';
 
@@ -38,7 +40,8 @@ class LoginApi {
     return await requestSender();
   }
 
-  Future<JwtTokenInfo> kakaoSocialLogin(String accessToken) async {
+  Future<JwtTokenInfo> kakaoSocialLogin(
+      BuildContext context, String accessToken) async {
     final url = Uri.parse('$baseUrl/oauth/login/kakao?code=$accessToken');
     final response = await http
         .get(url, headers: await getHeaders())
@@ -47,8 +50,20 @@ class LoginApi {
     });
 
     if (response.statusCode != 200) {
-      debugPrint(response.body);
-      throw Error();
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      debugPrint(json.toString());
+      int errorCode = json['code'];
+      if (errorCode == 410) {
+        String msg = json['data']['errMsg'];
+        // Assets().showPopup(context, );
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    AuthCodePage(msg: msg, kakaoAccessKey: accessToken)));
+      }
+
+      throw EmailNotVerified("이메일 인증을 진행해주세요.");
     }
 
     String responseBody = utf8.decode(response.bodyBytes);
@@ -56,6 +71,38 @@ class LoginApi {
     final tokenInfo = JwtTokenInfo.fromJson(list);
 
     return tokenInfo;
+  }
+
+  Future<bool> authEmail(String code) async {
+    final url = Uri.parse('$baseUrl/api/email-verification');
+    final response = await http
+        .post(url,
+            headers: await getHeaders(),
+            body: jsonEncode(<String, String>{
+              'code': code,
+            }))
+        .timeout(const Duration(seconds: 2), onTimeout: () {
+      throw TimeoutException("Request took too long.");
+    });
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<void> resendAuthEmail(String accessToken) async {
+    final url = Uri.parse('$baseUrl/oauth/login/kakao?code=$accessToken');
+    final response = await http
+        .get(url, headers: await getHeaders())
+        .timeout(const Duration(seconds: 2), onTimeout: () {
+      throw TimeoutException("Request took too long.");
+    });
+
+    if (response.statusCode == 500) {
+      throw Exception();
+    }
   }
 
   Future<void> refreshTokens(UserProvider userProvider) async {
@@ -139,6 +186,10 @@ class LoginApi {
       throw Exception();
     }
   }
+
+  // Future<void> deleteSocialAccount() {
+
+  // }
 }
 
 
