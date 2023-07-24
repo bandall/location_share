@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:location_share/models/jwt_Token_Info.dart';
+import 'package:location_share/models/jwt_token_info.dart';
 import 'package:location_share/provider/user_provider.dart';
 import 'package:location_share/services/login_api.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +38,7 @@ class _AuthCodePageState extends State<AuthCodePage> {
       throw Exception();
     }
 
-    userProvider.setState(
+    await userProvider.setState(
         accessTokenInfo['username'],
         accessTokenInfo['sub'],
         accessTokenInfo['auth'],

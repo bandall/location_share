@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:location_share/provider/user_provider.dart';
-import 'package:location_share/screen/app_bar.dart';
-import 'package:location_share/widget/assets.dart';
+import 'package:location_share/screen/component/app_bar.dart';
+import 'package:location_share/screen/component/assets.dart';
 import 'package:location_share/services/login_api.dart';
 import 'package:provider/provider.dart';
 
@@ -36,16 +36,6 @@ class _HomePageState extends State<HomePage>
       appBar: CustomAppBar(title: userProvider.username!),
       backgroundColor: Colors.white,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF6E8EFB),
-              Color(0xFFB293FC),
-            ],
-          ),
-        ),
         child: Column(
           children: [
             Expanded(
@@ -54,10 +44,10 @@ class _HomePageState extends State<HomePage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.location_on,
                       size: 80,
-                      color: Colors.white,
+                      color: Theme.of(context).primaryColor,
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -65,16 +55,16 @@ class _HomePageState extends State<HomePage>
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
+                    Text(
                       'Share your location with friends',
                       style: TextStyle(
                         fontSize: 20,
                         fontStyle: FontStyle.italic,
-                        color: Colors.white70,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -89,7 +79,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
                         'Access Token test',
@@ -109,7 +99,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       elevation: 4,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
                         'Refresh Token',

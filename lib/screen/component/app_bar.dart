@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
 
-  const CustomAppBar({super.key, this.title});
+  const CustomAppBar({Key? key, this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +17,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
         elevation: 5,
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF2196F3), Color(0xFF3F51B5)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+          decoration: const BoxDecoration(color: Colors.blueAccent),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const Icon(
+                Icons.location_on,
+                size: 26,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 8),
               Text(
                 title!,
                 style: const TextStyle(

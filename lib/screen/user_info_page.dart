@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:location_share/provider/user_provider.dart';
-import 'package:location_share/screen/app_bar.dart';
-import 'package:location_share/widget/assets.dart';
+import 'package:location_share/screen/component/app_bar.dart';
+import 'package:location_share/screen/component/assets.dart';
 import 'package:provider/provider.dart';
 
 import '../services/login_api.dart';
@@ -19,26 +19,31 @@ class _UserInfoPageState extends State<UserInfoPage>
   String email = '';
   String userProfileImgUrl = 'https://via.placeholder.com/150';
 
+  @override
+  void initState() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    super.initState();
+    username = userProvider.username!;
+    email = userProvider.email!;
+    userProfileImgUrl = userProvider.profileImageUrl!;
+  }
+
   void onLogoutPressed(UserProvider userProvider) async {
-    await LoginApi().logout();
+    try {
+      await LoginApi().logout();
+    } catch (e) {}
     userProvider.deleteState(false);
   }
 
   void onEditInfoPressed(UserProvider userProvider) async {
-    // Create TextEditingController instances for both username and email
     final TextEditingController usernameEditingController =
         TextEditingController();
-    final TextEditingController emailEditingController =
-        TextEditingController();
 
-    // Create GlobalKey for the Form
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-    // Custom AlertDialog shape
     RoundedRectangleBorder customRoundedRectangleBorder =
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(15));
 
-    // Show a popup containing TextFields to change the username and email
     Map<String, dynamic>? editedValues = await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (context) {
@@ -47,7 +52,7 @@ class _UserInfoPageState extends State<UserInfoPage>
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(10),
                 color: Colors.white,
               ),
               child: Form(
@@ -66,24 +71,24 @@ class _UserInfoPageState extends State<UserInfoPage>
                     TextFormField(
                       controller: usernameEditingController,
                       decoration: InputDecoration(
-                        labelText: 'Username',
-                        hintText: '새 유저 이름',
+                        labelText: '닉네임',
+                        hintText: username,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(color: Colors.blue),
                         ),
                         errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(color: Colors.red),
                         ),
                         focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(8),
                           borderSide: const BorderSide(color: Colors.red),
                         ),
                       ),
@@ -92,14 +97,14 @@ class _UserInfoPageState extends State<UserInfoPage>
                       },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a username';
+                          return '닉네임을 입력해주세요';
                         } else if (value.length > 10) {
-                          return 'Username should be less than 10 characters';
+                          return '닉네임은 10 글자보다 작아야 합니다.';
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -113,32 +118,32 @@ class _UserInfoPageState extends State<UserInfoPage>
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 15),
+                                horizontal: 35, vertical: 15),
                             backgroundColor: Colors.blue,
                             textStyle: const TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text('Save'),
+                          child: const Text('저장'),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 30, vertical: 15),
+                                horizontal: 35, vertical: 15),
                             textStyle: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade700,
+                              color: Colors.red.shade700,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: BorderSide(color: Colors.grey.shade200),
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.red.shade200),
                             ),
                           ),
-                          child: const Text('Cancel'),
+                          child: const Text('취소'),
                         ),
                       ],
                     ),
@@ -164,46 +169,27 @@ class _UserInfoPageState extends State<UserInfoPage>
   void onDeleteUserPressed() async {}
 
   @override
-  void initState() {
-    super.initState();
-    debugPrint("user_info_init");
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final userProvider = Provider.of<UserProvider>(context, listen: false);
-      setState(() {
-        username = userProvider.username ?? username;
-        email = userProvider.email ?? email;
-        userProfileImgUrl = userProvider.profileImageUrl ?? userProfileImgUrl;
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     super.build(context);
     final userProvider = Provider.of<UserProvider>(context);
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: const CustomAppBar(title: 'User Information'),
       backgroundColor: Colors.white,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF6E8EFB),
-              Color(0xFFB293FC),
-            ],
-          ),
-        ),
+        padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
+                width: screenSize.width * 0.80,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withOpacity(0.5),
@@ -213,9 +199,6 @@ class _UserInfoPageState extends State<UserInfoPage>
                     ),
                   ],
                 ),
-                width: MediaQuery.of(context).size.width * 0.9,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -234,6 +217,7 @@ class _UserInfoPageState extends State<UserInfoPage>
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -249,102 +233,66 @@ class _UserInfoPageState extends State<UserInfoPage>
               ),
               const SizedBox(height: 20),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Spacer(),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          spreadRadius: 0,
-                          blurRadius: 4,
-                          offset: const Offset(4, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: onDeleteUserPressed,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                      child: const Text(
-                        '계정 삭제',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                  userInfoActionButton(
+                    onPressed: onDeleteUserPressed,
+                    backgroundColor: Colors.red,
+                    text: '계정 삭제',
+                    context: context,
                   ),
-                  const Spacer(),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          spreadRadius: 0,
-                          blurRadius: 4,
-                          offset: const Offset(4, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => onEditInfoPressed(userProvider),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF66ABF2),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                      child: const Text(
-                        '정보 수정',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                  userInfoActionButton(
+                    onPressed: () => onEditInfoPressed(userProvider),
+                    backgroundColor: const Color(0xFF66ABF2),
+                    text: '정보 수정',
+                    context: context,
                   ),
-                  const Spacer(),
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          spreadRadius: 0,
-                          blurRadius: 4,
-                          offset: const Offset(4, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () => onLogoutPressed(userProvider),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 255, 95, 95),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        textStyle: const TextStyle(fontSize: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      ),
-                      child: const Text(
-                        '로그아웃',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                  userInfoActionButton(
+                    onPressed: () => onLogoutPressed(userProvider),
+                    backgroundColor: const Color.fromARGB(255, 255, 95, 95),
+                    text: '로그아웃',
+                    context: context,
                   ),
-                  const Spacer(),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget userInfoActionButton({
+    required Function() onPressed,
+    required Color backgroundColor,
+    required String text,
+    required BuildContext context,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            spreadRadius: 0,
+            blurRadius: 4,
+            offset: const Offset(4, 4),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          textStyle: const TextStyle(fontSize: 18),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );

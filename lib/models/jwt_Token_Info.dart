@@ -1,4 +1,3 @@
-
 class JwtTokenInfo {
   final String? accessToken,
       refreshToken,

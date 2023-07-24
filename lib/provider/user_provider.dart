@@ -104,6 +104,11 @@ class UserProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void updateLoginExpired(bool isExpired, bool notify) {
+    _isLoginExpired = isExpired;
+    if (notify) notifyListeners();
+  }
+
   Future<void> deleteState(bool isLoginExpired) async {
     _username = null;
     _email = null;

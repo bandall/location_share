@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:location_share/provider/user_provider.dart';
+import 'package:location_share/screen/component/assets.dart';
 import 'package:location_share/screen/home.dart';
 import 'package:location_share/services/login_api.dart';
-import 'package:location_share/widget/assets.dart';
 import 'package:provider/provider.dart';
 import 'user_info_page.dart';
 import 'main_service_page.dart';
@@ -13,7 +13,7 @@ class TabPage extends StatefulWidget {
   const TabPage({Key? key}) : super(key: key);
 
   @override
-  _TabPageState createState() => _TabPageState();
+  State<TabPage> createState() => _TabPageState();
 }
 
 class _TabPageState extends State<TabPage> with SingleTickerProviderStateMixin {

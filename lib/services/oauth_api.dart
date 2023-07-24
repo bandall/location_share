@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
-import 'package:location_share/exceptions/custom_exception.dart';
+import 'package:location_share/models/exceptions/custom_exception.dart';
 
-import '../models/jwt_Token_Info.dart';
+import '../models/jwt_token_info.dart';
 import '../provider/user_provider.dart';
 import 'login_api.dart';
 

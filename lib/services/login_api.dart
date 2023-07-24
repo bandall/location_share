@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:location_share/exceptions/custom_exception.dart';
+import 'package:location_share/models/exceptions/custom_exception.dart';
 import 'package:location_share/models/api_response.dart';
-import 'package:location_share/models/jwt_Token_Info.dart';
-import 'package:location_share/models/login_expire_error.dart';
+import 'package:location_share/models/exceptions/login_expire_error.dart';
+import 'package:location_share/models/jwt_token_info.dart';
 import 'package:location_share/screen/auth_page.dart';
 
 import '../provider/user_provider.dart';
@@ -26,6 +26,7 @@ class LoginApi {
     return headers;
   }
 
+  // 요청 시도 후 4011 오류(access token 만료) 발생 시 재발급 후 재시도
   Future<http.Response> _sendRequestWithRefreshWhenExpired(
       Future<http.Response> Function() requestSender,
       UserProvider userProvider) async {
@@ -33,7 +34,10 @@ class LoginApi {
         onTimeout: () {
       throw TimeoutException("서버 연결에 실패했습니다.");
     });
-    if (response.statusCode != 401) return response;
+
+    int code = jsonDecode(utf8.decode(response.bodyBytes))['code'];
+
+    if (code != 4011) return response;
 
     debugPrint("refresh and trying again");
     await refreshTokens(userProvider);
@@ -48,23 +52,20 @@ class LoginApi {
         .timeout(const Duration(seconds: 2), onTimeout: () {
       throw TimeoutException("Request took too long.");
     });
+    final json = jsonDecode(utf8.decode(response.bodyBytes));
+    int code = json['code'];
 
-    if (response.statusCode != 200) {
-      final json = jsonDecode(utf8.decode(response.bodyBytes));
-      debugPrint(json.toString());
-      int errorCode = json['code'];
-      if (errorCode == 410) {
-        String msg = json['data']['errMsg'];
-        // Assets().showPopup(context, );
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    AuthCodePage(msg: msg, kakaoAccessKey: accessToken)));
-      }
-
+    if (code == 410) {
+      String msg = json['data']['errMsg'];
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  AuthCodePage(msg: msg, kakaoAccessKey: accessToken)));
       throw EmailNotVerified("이메일 인증을 진행해주세요.");
     }
+
+    if (response.statusCode != 200) throw Exception("로그인에 실패했습니다.");
 
     String responseBody = utf8.decode(response.bodyBytes);
     final list = jsonDecode(responseBody);
@@ -124,17 +125,17 @@ class LoginApi {
     if (response.statusCode != 200) {
       debugPrint("refresh 토큰 갱신 실패로 로그아웃");
       await userProvider.deleteState(true);
-      throw LoginExpiredError();
+      throw LoginExpiredException("로그인 토큰 만료");
     }
 
-    String responseBody = utf8.decode(response.bodyBytes);
-    final tokenInfo = JwtTokenInfo.fromJson(jsonDecode(responseBody));
+    final tokenInfo =
+        JwtTokenInfo.fromJson(jsonDecode(utf8.decode(response.bodyBytes)));
     Map<String, dynamic> accessTokenInfo =
         JwtDecoder.decode(tokenInfo.accessToken!);
 
     if (accessTokenInfo['username'] == null) {
       await userProvider.deleteState(true);
-      throw LoginExpiredError();
+      throw LoginExpiredException("로그인 토큰 만료");
     }
 
     await userProvider.updateState(
@@ -192,7 +193,7 @@ class LoginApi {
   // }
 }
 
-
+// 이후에 요청을 보내기 전에 토큰 만료를 확인하는 로직 구현해서 프록시에 적용
 // Future<void> checkLoginStatus(UserProvider userProvider) async {
 //   String? accessToken = await _storage.read(key: 'accessToken');
 //   String? refreshToken = await _storage.read(key: 'refreshToken');

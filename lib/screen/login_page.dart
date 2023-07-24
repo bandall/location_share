@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:location_share/provider/user_provider.dart';
-import 'package:location_share/screen/login.dart';
+import 'package:location_share/screen/component/assets.dart';
+import 'package:location_share/screen/id_pw_login.dart';
 import 'package:location_share/services/oauth_api.dart';
-import 'package:location_share/widget/assets.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       if (userProvider.isLoginExpired) {
         Assets().showErrorSnackBar(context, "로그인 토큰이 만료되었습니다. 다시 로그인해주세요.");
+        userProvider.updateLoginExpired(false, false);
       }
     });
   }
@@ -39,55 +40,19 @@ class _LoginPageState extends State<LoginPage> {
       home: Scaffold(
         backgroundColor: Colors.white,
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF6E8EFB),
-                Color(0xFFB293FC),
-              ],
-            ),
-          ),
           child: Center(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.1),
-                        ),
-                        width: 140,
-                        height: 140,
-                      ),
-                      const Icon(
-                        Icons.location_on,
-                        size: 80,
-                        color: Colors.white,
-                      ),
-                    ],
+                  const Icon(
+                    Icons.location_on,
+                    size: 80,
+                    color: Colors.blue,
                   ),
                   const SizedBox(height: 15),
                   Container(
-                    // decoration: BoxDecoration(
-                    //   color: Colors.white.withOpacity(0.8),
-                    //   borderRadius: const BorderRadius.all(
-                    //     Radius.circular(25),
-                    //   ),
-                    //   boxShadow: [
-                    //     BoxShadow(
-                    //       color: Colors.black.withOpacity(0.1),
-                    //       blurRadius: 10,
-                    //       offset: const Offset(0, 4),
-                    //     ),
-                    //   ],
-                    // ),
                     padding: const EdgeInsets.symmetric(
                       vertical: 12,
                       horizontal: 30,
@@ -95,8 +60,8 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text(
                       '위치 공유 플랫폼',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
+                        color: Colors.black87,
+                        fontSize: 28,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -142,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                         backgroundColor: Colors.blue.shade100,
                         padding: const EdgeInsets.symmetric(horizontal: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         textStyle: const TextStyle(
                             fontSize: 15, fontFamily: 'Poppins'),
@@ -151,24 +116,20 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => IdPwLoginPage(),
+                            builder: (context) => const IdPwLoginPage(),
                           ),
                         ),
                       },
                       child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Icon(Icons.mail_outline, color: Colors.black),
-                              SizedBox(width: 10),
-                            ],
-                          ),
-                          Expanded(
-                            child: Text(
-                              '이메일로 로그인',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.black),
-                            ),
+                          Icon(Icons.mail_outline,
+                              size: 25, color: Colors.black),
+                          SizedBox(width: 70),
+                          Text(
+                            '이메일로 로그인',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.black),
                           ),
                         ],
                       ),
