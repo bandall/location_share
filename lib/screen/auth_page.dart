@@ -9,11 +9,16 @@ import 'package:provider/provider.dart';
 
 class AuthCodePage extends StatefulWidget {
   const AuthCodePage(
-      {Key? key, required this.msg, required this.kakaoAccessKey})
+      {Key? key,
+      required this.msg,
+      required this.kakaoAccessKey,
+      required this.email})
       : super(key: key);
 
   final String msg;
   final String kakaoAccessKey;
+  final String email;
+
   @override
   State<AuthCodePage> createState() => _AuthCodePageState();
 }
@@ -53,7 +58,7 @@ class _AuthCodePageState extends State<AuthCodePage> {
       _isLoading = true;
     });
     try {
-      bool result = await LoginApi().authEmail(_controller.text);
+      bool result = await LoginApi().authEmail(widget.email, _controller.text);
       if (!result) {
         _errorMessageColor = Colors.red;
         _errorMessage = "잘못되거나 만료된 인증코드";

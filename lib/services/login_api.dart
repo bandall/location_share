@@ -57,11 +57,12 @@ class LoginApi {
 
     if (code == 410) {
       String msg = json['data']['errMsg'];
+      String email = json['data']['email'];
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  AuthCodePage(msg: msg, kakaoAccessKey: accessToken)));
+              builder: (context) => AuthCodePage(
+                  msg: msg, kakaoAccessKey: accessToken, email: email)));
       throw EmailNotVerified("이메일 인증을 진행해주세요.");
     }
 
@@ -74,12 +75,13 @@ class LoginApi {
     return tokenInfo;
   }
 
-  Future<bool> authEmail(String code) async {
+  Future<bool> authEmail(String email, String code) async {
     final url = Uri.parse('$baseUrl/api/email-verification');
     final response = await http
         .post(url,
             headers: await getHeaders(),
             body: jsonEncode(<String, String>{
+              'email': email,
               'code': code,
             }))
         .timeout(const Duration(seconds: 2), onTimeout: () {
