@@ -17,15 +17,18 @@ class _UserInfoPageState extends State<UserInfoPage>
     with AutomaticKeepAliveClientMixin {
   String username = '';
   String email = '';
-  String userProfileImgUrl = 'https://via.placeholder.com/150';
+  String userProfileImgUrl = 'images/placeholder.png';
 
   @override
   void initState() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     super.initState();
-    username = userProvider.username!;
-    email = userProvider.email!;
-    userProfileImgUrl = userProvider.profileImageUrl!;
+    username =
+        userProvider.username != null ? userProvider.username! : username;
+    email = userProvider.email != null ? userProvider.email! : email;
+    userProfileImgUrl = userProvider.profileImageUrl != null
+        ? userProvider.profileImageUrl!
+        : userProfileImgUrl;
   }
 
   void onLogoutPressed(UserProvider userProvider) async {
@@ -204,7 +207,7 @@ class _UserInfoPageState extends State<UserInfoPage>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     ClipOval(
-                      child: Image.network(
+                      child: Image.asset(
                         userProfileImgUrl,
                         fit: BoxFit.cover,
                         width: 100,

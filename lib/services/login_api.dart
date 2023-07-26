@@ -15,6 +15,7 @@ import '../provider/user_provider.dart';
 
 class LoginApi {
   static const baseUrl = "http://192.168.0.43:8080";
+  final timoutTime = const Duration(seconds: 2);
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<Map<String, String>> getHeaders({bool authRequired = false}) async {
@@ -30,8 +31,7 @@ class LoginApi {
   Future<http.Response> _sendRequestWithRefreshWhenExpired(
       Future<http.Response> Function() requestSender,
       UserProvider userProvider) async {
-    final response = await requestSender().timeout(const Duration(seconds: 2),
-        onTimeout: () {
+    final response = await requestSender().timeout(timoutTime, onTimeout: () {
       throw TimeoutException("서버 연결에 실패했습니다.");
     });
 
@@ -49,13 +49,12 @@ class LoginApi {
     final url = Uri.parse('$baseUrl/oauth/login/kakao?code=$accessToken');
     final response = await http
         .get(url, headers: await getHeaders())
-        .timeout(const Duration(seconds: 2), onTimeout: () {
+        .timeout(timoutTime, onTimeout: () {
       throw TimeoutException("Request took too long.");
     });
     final json = jsonDecode(utf8.decode(response.bodyBytes));
-    int code = json['code'];
 
-    if (code == 410) {
+    if (json['code'] == 410) {
       String msg = json['data']['errMsg'];
       String email = json['data']['email'];
       Navigator.push(
@@ -84,7 +83,7 @@ class LoginApi {
               'email': email,
               'code': code,
             }))
-        .timeout(const Duration(seconds: 2), onTimeout: () {
+        .timeout(timoutTime, onTimeout: () {
       throw TimeoutException("Request took too long.");
     });
 
@@ -99,7 +98,7 @@ class LoginApi {
     final url = Uri.parse('$baseUrl/oauth/login/kakao?code=$accessToken');
     final response = await http
         .get(url, headers: await getHeaders())
-        .timeout(const Duration(seconds: 2), onTimeout: () {
+        .timeout(timoutTime, onTimeout: () {
       throw TimeoutException("Request took too long.");
     });
 
@@ -112,12 +111,16 @@ class LoginApi {
     final url = Uri.parse('$baseUrl/api/account/refresh');
     String? accessToken = await _storage.read(key: 'accessToken');
     String? refreshToken = await _storage.read(key: 'refreshToken');
-    final response = await http.post(url,
-        headers: await getHeaders(),
-        body: jsonEncode(<String, String>{
-          'accessToken': accessToken!,
-          'refreshToken': refreshToken!,
-        }));
+    final response = await http
+        .post(url,
+            headers: await getHeaders(),
+            body: jsonEncode(<String, String>{
+              'accessToken': accessToken!,
+              'refreshToken': refreshToken!,
+            }))
+        .timeout(timoutTime, onTimeout: () {
+      throw TimeoutException("Request took too long.");
+    });
 
     if (response.statusCode == 500) {
       debugPrint("서버 오류 발생");
@@ -147,6 +150,58 @@ class LoginApi {
         tokenInfo.accessToken,
         tokenInfo.refreshToken,
         null);
+  }
+
+  Future<void> createAccount(
+      String email, String password, String username) async {
+    final url = Uri.parse('$baseUrl/api/account/create');
+    final response = await http
+        .post(url,
+            headers: await getHeaders(),
+            body: jsonEncode(<String, String>{
+              'email': email,
+              'password': password,
+              'username': username
+            }))
+        .timeout(timoutTime, onTimeout: () {
+      throw TimeoutException("Request took too long.");
+    });
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    handleStatusCodeError(response);
+  }
+
+  Future<JwtTokenInfo> idpwLogin(String email, String password) async {
+    final url = Uri.parse('$baseUrl/api/account/auth');
+    final response = await http
+        .post(url,
+            headers: await getHeaders(),
+            body: jsonEncode(<String, String>{
+              'loginType': 'NONE',
+              'email': email,
+              'password': password,
+            }))
+        .timeout(timoutTime, onTimeout: () {
+      throw TimeoutException("Request took too long.");
+    });
+
+    final json = jsonDecode(utf8.decode(response.bodyBytes));
+    int code = json['code'];
+    if (code == 410) {
+      await _storage.write(key: 'email', value: email);
+      throw EmailNotVerified("이메일 인증을 진행해주세요.");
+    }
+
+    handleStatusCodeError(response);
+
+    String responseBody = utf8.decode(response.bodyBytes);
+    final list = jsonDecode(responseBody);
+    final tokenInfo = JwtTokenInfo.fromJson(list);
+
+    return tokenInfo;
   }
 
   Future<void> logout() async {
@@ -183,16 +238,33 @@ class LoginApi {
     await userProvider.updateUsername(newUsername);
   }
 
-  void handleStatusCodeError(http.Response response) {
-    if (response.statusCode != 200) {
-      debugPrint('Server error');
-      throw Exception();
-    }
+  Future<void> editPassword(
+      UserProvider userProvider, String oldPassword, String newPassword) async {
+    final url = Uri.parse('$baseUrl/api/account/update-password');
+    final response = await _sendRequestWithRefreshWhenExpired(() async {
+      return await http.post(url,
+          headers: await getHeaders(authRequired: true),
+          body: jsonEncode(<String, String>{
+            "oldPassword": oldPassword,
+            "newPassword": newPassword
+          }));
+    }, userProvider);
+
+    handleStatusCodeError(response);
   }
 
-  // Future<void> deleteSocialAccount() {
+  void handleStatusCodeError(http.Response response) {
+    if (response.statusCode == 500) {
+      debugPrint('Server error');
+      throw Exception("서버에 오류가 발생했습니다.");
+    }
 
-  // }
+    if (response.statusCode != 200) {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      String errMsg = json['data']['errMsg'];
+      throw Exception(errMsg);
+    }
+  }
 }
 
 // 이후에 요청을 보내기 전에 토큰 만료를 확인하는 로직 구현해서 프록시에 적용

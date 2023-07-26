@@ -28,12 +28,6 @@ class OAuthApi {
       Map<String, dynamic> accessTokenInfo =
           JwtDecoder.decode(tokenInfo.accessToken!);
 
-      final String? username = accessTokenInfo['username'];
-
-      if (username == null) {
-        return false;
-      }
-
       userProvider.setState(
           accessTokenInfo['username'],
           accessTokenInfo['sub'],

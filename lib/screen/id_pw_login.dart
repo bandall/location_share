@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:location_share/models/exceptions/custom_exception.dart';
+import 'package:location_share/provider/user_provider.dart';
+import 'package:location_share/screen/component/assets.dart';
 import 'package:location_share/screen/sign_up.dart';
+import 'package:location_share/services/login_api.dart';
+import 'package:provider/provider.dart';
 
 class IdPwLoginPage extends StatefulWidget {
   const IdPwLoginPage({Key? key}) : super(key: key);
@@ -10,11 +16,45 @@ class IdPwLoginPage extends StatefulWidget {
 
 class _IdPwLoginPageState extends State<IdPwLoginPage> {
   final _formKey = GlobalKey<FormState>();
+  Pattern pattern =
+      r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+
   String _email = '';
   String _password = '';
+  bool _isLoading = false;
+
+  void onLoginPressed(UserProvider userProvider) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final tokenInfo = await LoginApi().idpwLogin(_email, _password);
+      Map<String, dynamic> accessTokenInfo =
+          JwtDecoder.decode(tokenInfo.accessToken!);
+
+      await userProvider.setState(
+          accessTokenInfo['username'],
+          accessTokenInfo['sub'],
+          accessTokenInfo['auth'],
+          tokenInfo.accessToken,
+          tokenInfo.refreshToken,
+          false);
+      Navigator.pop(context);
+    } on EmailNotVerified {
+      debugPrint("");
+    } catch (e) {
+      Assets().showErrorSnackBar(context, "로그인에 실패했습니다.");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -55,7 +95,7 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
                       children: [
                         TextFormField(
                           decoration: InputDecoration(
-                            labelText: 'Email',
+                            labelText: '이메일',
                             labelStyle: const TextStyle(fontSize: 18),
                             contentPadding:
                                 const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -71,6 +111,10 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
                             if (value == null || value.isEmpty) {
                               return '이메일을 입력해주세요';
                             }
+                            RegExp regex = RegExp(pattern as String);
+                            if (!regex.hasMatch(value)) {
+                              return '이메일 형식이 올바르지 않습니다';
+                            }
                             return null;
                           },
                           onChanged: (value) {
@@ -82,7 +126,7 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
                         const SizedBox(height: 20),
                         TextFormField(
                           decoration: InputDecoration(
-                            labelText: 'Password',
+                            labelText: '비밀번호',
                             labelStyle: const TextStyle(fontSize: 18),
                             contentPadding:
                                 const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -108,20 +152,21 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
                         ),
                         const SizedBox(height: 30),
                         SizedBox(
-                          width: double.infinity,
+                          height: 50,
+                          width: double.infinity, // fixed height for the button
                           child: ElevatedButton(
-                            onPressed: _email.isEmpty || _password.isEmpty
+                            onPressed: _email.isEmpty ||
+                                    _password.isEmpty ||
+                                    _isLoading
                                 ? null
-                                : () {
+                                : () async {
                                     if (_formKey.currentState!.validate()) {
-                                      // Handle email/password login logic
-                                      debugPrint('Email: $_email');
-                                      debugPrint('Password: $_password');
+                                      onLoginPressed(userProvider);
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.lightBlue.shade900,
-                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
                               backgroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(5),
@@ -131,12 +176,22 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
                                 ),
                               ),
                             ),
-                            child: Text(
-                              '로그인',
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.lightBlue.shade900),
-                            ),
+                            child: _isLoading
+                                ? SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.lightBlue.shade900),
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    '로그인',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.lightBlue.shade900),
+                                  ),
                           ),
                         ),
                       ],
