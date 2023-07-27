@@ -115,6 +115,7 @@ class UserProvider with ChangeNotifier {
     _role = null;
     _accessToken = null;
     _refreshToken = null;
+    _profileImageUrl = null;
     _isLoginExpired = isLoginExpired;
     await _storage.deleteAll();
     notifyListeners();

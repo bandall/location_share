@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:location_share/screen/component/assets.dart';
+import 'package:location_share/services/login_api.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -18,15 +20,11 @@ class _SignUpPageState extends State<SignUpPage> {
       RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$');
   final RegExp _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
-  final bool _isButtonDisabled = false;
   bool _isLoading = false;
 
-  void onCreatAccountPressed() async {
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _isLoading = false;
-    });
+  Future<void> onCreatAccountPressed() async {
+    LoginApi().createAccount(_emailController.text, _passwordController.text,
+        _usernameController.text);
   }
 
   InputDecoration _buildModernInputDecoration(String labelText) {
@@ -128,12 +126,22 @@ class _SignUpPageState extends State<SignUpPage> {
                       onPressed: _isLoading
                           ? null
                           : () async {
-                              setState(() {
-                                _isLoading = true;
-                              });
-
                               if (_formKey.currentState!.validate()) {
-                                onCreatAccountPressed();
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                                try {
+                                  await onCreatAccountPressed();
+                                  Navigator.pop(context);
+                                  Assets().showPopup(
+                                      context, '계정이 생성되었습니다.\n 로그인을 완료해주세요.');
+                                } catch (e) {
+                                  Assets().showPopup(context, '계정 생성에 실패했습니다.');
+                                }
+
+                                setState(() {
+                                  _isLoading = false;
+                                });
                               }
                             },
                       style: ButtonStyle(

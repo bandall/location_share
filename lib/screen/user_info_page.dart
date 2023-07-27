@@ -18,6 +18,7 @@ class _UserInfoPageState extends State<UserInfoPage>
   String username = '';
   String email = '';
   String userProfileImgUrl = 'images/placeholder.png';
+  bool hasProfileImage = false;
 
   @override
   void initState() {
@@ -26,9 +27,10 @@ class _UserInfoPageState extends State<UserInfoPage>
     username =
         userProvider.username != null ? userProvider.username! : username;
     email = userProvider.email != null ? userProvider.email! : email;
-    userProfileImgUrl = userProvider.profileImageUrl != null
-        ? userProvider.profileImageUrl!
-        : userProfileImgUrl;
+    if (userProvider.profileImageUrl != null) {
+      userProfileImgUrl = userProvider.profileImageUrl!;
+      hasProfileImage = true;
+    }
   }
 
   void onLogoutPressed(UserProvider userProvider) async {
@@ -207,12 +209,19 @@ class _UserInfoPageState extends State<UserInfoPage>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     ClipOval(
-                      child: Image.asset(
-                        userProfileImgUrl,
-                        fit: BoxFit.cover,
-                        width: 100,
-                        height: 100,
-                      ),
+                      child: hasProfileImage
+                          ? Image.network(
+                              userProfileImgUrl,
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                            )
+                          : Image.asset(
+                              userProfileImgUrl,
+                              fit: BoxFit.cover,
+                              width: 100,
+                              height: 100,
+                            ),
                     ),
                     const SizedBox(height: 16),
                     Text(

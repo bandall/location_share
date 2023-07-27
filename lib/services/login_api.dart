@@ -20,6 +20,7 @@ class LoginApi {
 
   Future<Map<String, String>> getHeaders({bool authRequired = false}) async {
     final headers = {'Content-Type': 'application/json; charset=UTF-8'};
+    headers['Access-Control-Allow-Origin'] = "http://192.168.0.43:8080";
     if (authRequired) {
       String? accessToken = await _storage.read(key: 'accessToken');
       headers['Authorization'] = 'Bearer $accessToken';
@@ -61,7 +62,10 @@ class LoginApi {
           context,
           MaterialPageRoute(
               builder: (context) => AuthCodePage(
-                  msg: msg, kakaoAccessKey: accessToken, email: email)));
+                  loginType: "KAKAO",
+                  msg: msg,
+                  authString: accessToken,
+                  email: email)));
       throw EmailNotVerified("이메일 인증을 진행해주세요.");
     }
 
@@ -94,8 +98,21 @@ class LoginApi {
     }
   }
 
-  Future<void> resendAuthEmail(String accessToken) async {
+  Future<void> resendAuthEmailKakao(String accessToken) async {
     final url = Uri.parse('$baseUrl/oauth/login/kakao?code=$accessToken');
+    final response = await http
+        .get(url, headers: await getHeaders())
+        .timeout(timoutTime, onTimeout: () {
+      throw TimeoutException("Request took too long.");
+    });
+
+    if (response.statusCode == 500) {
+      throw Exception();
+    }
+  }
+
+  Future<void> resendAuthEmail(String email) async {
+    final url = Uri.parse('$baseUrl/api/email-verification?email=$email');
     final response = await http
         .get(url, headers: await getHeaders())
         .timeout(timoutTime, onTimeout: () {
@@ -190,9 +207,11 @@ class LoginApi {
 
     final json = jsonDecode(utf8.decode(response.bodyBytes));
     int code = json['code'];
+
     if (code == 410) {
+      String errMsg = json['data']['errMsg'];
       await _storage.write(key: 'email', value: email);
-      throw EmailNotVerified("이메일 인증을 진행해주세요.");
+      throw EmailNotVerified(errMsg);
     }
 
     handleStatusCodeError(response);

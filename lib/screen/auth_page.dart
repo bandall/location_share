@@ -10,13 +10,15 @@ import 'package:provider/provider.dart';
 class AuthCodePage extends StatefulWidget {
   const AuthCodePage(
       {Key? key,
+      required this.loginType,
       required this.msg,
-      required this.kakaoAccessKey,
+      required this.authString,
       required this.email})
       : super(key: key);
 
+  final String loginType;
   final String msg;
-  final String kakaoAccessKey;
+  final String authString;
   final String email;
 
   @override
@@ -31,17 +33,17 @@ class _AuthCodePageState extends State<AuthCodePage> {
 
   void completeLogin() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final JwtTokenInfo tokenInfo =
-        await LoginApi().kakaoSocialLogin(context, widget.kakaoAccessKey);
+
+    JwtTokenInfo? tokenInfo;
+
+    if (widget.loginType == "NONE") {
+      tokenInfo = await LoginApi().idpwLogin(widget.email, widget.authString);
+    } else if (widget.loginType == "KAKAO") {
+      tokenInfo = await LoginApi().kakaoSocialLogin(context, widget.authString);
+    }
 
     Map<String, dynamic> accessTokenInfo =
-        JwtDecoder.decode(tokenInfo.accessToken!);
-
-    final String? username = accessTokenInfo['username'];
-
-    if (username == null) {
-      throw Exception();
-    }
+        JwtDecoder.decode(tokenInfo!.accessToken!);
 
     await userProvider.setState(
         accessTokenInfo['username'],
@@ -84,7 +86,7 @@ class _AuthCodePageState extends State<AuthCodePage> {
 
   void onResendCode() async {
     try {
-      await LoginApi().resendAuthEmail(widget.kakaoAccessKey);
+      await LoginApi().resendAuthEmail(widget.email);
       setState(() {
         _errorMessageColor = Colors.blue;
         _errorMessage = "인증 코드가 재발급되었습니다.";
@@ -143,7 +145,7 @@ class _AuthCodePageState extends State<AuthCodePage> {
                   borderSide: BorderSide.none,
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                hintText: '• • • • • • •',
+                hintText: '• • • • • •',
                 hintStyle: const TextStyle(
                   color: Colors.grey,
                   fontWeight: FontWeight.bold,
@@ -159,7 +161,7 @@ class _AuthCodePageState extends State<AuthCodePage> {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              maxLength: 7,
+              maxLength: 6,
               onChanged: (value) {
                 setState(() {
                   _errorMessage = "";

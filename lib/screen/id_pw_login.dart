@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:location_share/models/exceptions/custom_exception.dart';
 import 'package:location_share/provider/user_provider.dart';
+import 'package:location_share/screen/auth_page.dart';
 import 'package:location_share/screen/component/assets.dart';
 import 'package:location_share/screen/sign_up.dart';
 import 'package:location_share/services/login_api.dart';
@@ -41,8 +42,16 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
           tokenInfo.refreshToken,
           false);
       Navigator.pop(context);
-    } on EmailNotVerified {
-      debugPrint("");
+    } on EmailNotVerified catch (e) {
+      Navigator.pop(context);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => AuthCodePage(
+                  loginType: "NONE",
+                  msg: e.cause,
+                  authString: _password,
+                  email: _email)));
     } catch (e) {
       Assets().showErrorSnackBar(context, "로그인에 실패했습니다.");
     }
