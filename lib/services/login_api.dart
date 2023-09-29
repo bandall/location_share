@@ -20,7 +20,6 @@ class LoginApi {
 
   Future<Map<String, String>> getHeaders({bool authRequired = false}) async {
     final headers = {'Content-Type': 'application/json; charset=UTF-8'};
-    headers['Access-Control-Allow-Origin'] = "http://192.168.0.43:8080";
     if (authRequired) {
       String? accessToken = await _storage.read(key: 'accessToken');
       headers['Authorization'] = 'Bearer $accessToken';
@@ -197,19 +196,19 @@ class LoginApi {
         .post(url,
             headers: await getHeaders(),
             body: jsonEncode(<String, String>{
-              'loginType': 'NONE',
+              'loginType': 'EMAIL_PW',
               'email': email,
               'password': password,
             }))
         .timeout(timoutTime, onTimeout: () {
       throw TimeoutException("Request took too long.");
     });
-
     final json = jsonDecode(utf8.decode(response.bodyBytes));
     int code = json['code'];
 
     if (code == 410) {
       String errMsg = json['data']['errMsg'];
+      print(errMsg);
       await _storage.write(key: 'email', value: email);
       throw EmailNotVerified(errMsg);
     }

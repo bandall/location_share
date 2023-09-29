@@ -65,6 +65,7 @@ class _IdPwLoginPageState extends State<IdPwLoginPage> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
+      appBar: AppBar(title: const Text('')),
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(

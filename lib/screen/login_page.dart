@@ -13,8 +13,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool _loading = false;
-
   @override
   void initState() {
     super.initState();
@@ -31,112 +29,96 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
 
-    return MaterialApp(
-      title: 'Login Page',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Poppins',
-      ),
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        body: Container(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  const Icon(
-                    Icons.location_on,
-                    size: 80,
-                    color: Colors.blue,
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Container(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const Icon(
+                  Icons.location_on,
+                  size: 80,
+                  color: Colors.blue,
+                ),
+                const SizedBox(height: 15),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 30,
                   ),
-                  const SizedBox(height: 15),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 30,
-                    ),
-                    child: const Text(
-                      '위치 공유 플랫폼',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  child: const Text(
+                    '위치 공유 플랫폼',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Ink(
-                    decoration: ShapeDecoration(
-                      color: const Color(0xFFfee500),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: InkWell(
-                      onTap: _loading
-                          ? null
-                          : () async {
-                              setState(() {
-                                _loading = true;
-                              });
-                              bool hasError = await OAuthApi()
-                                  .signInWithKakao(context, userProvider);
-                              if (!hasError) {
-                                if (!mounted) return;
-                                Assets().showErrorSnackBar(
-                                    context, "로그인 중 오류가 발생했습니다.");
-                              }
-                              setState(() {
-                                _loading = false;
-                              });
-                            },
+                ),
+                const SizedBox(height: 20),
+                Ink(
+                  decoration: ShapeDecoration(
+                    color: const Color(0xFFfee500),
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
-                      child: Image.asset(
-                        'images/kakao_login_button.png',
-                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: 300,
-                    height: 45,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade100,
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        textStyle: const TextStyle(
-                            fontSize: 15, fontFamily: 'Poppins'),
-                      ),
-                      onPressed: () => {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const IdPwLoginPage(),
-                          ),
-                        ),
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Icon(Icons.mail_outline,
-                              size: 25, color: Colors.black),
-                          SizedBox(width: 70),
-                          Text(
-                            '이메일로 로그인',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        ],
-                      ),
+                  child: InkWell(
+                    onTap: () async {
+                      bool hasError = await OAuthApi()
+                          .signInWithKakao(context, userProvider);
+                      if (!hasError) {
+                        if (!mounted) return;
+                        Assets()
+                            .showErrorSnackBar(context, "로그인 중 오류가 발생했습니다.");
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    child: Image.asset(
+                      'images/kakao_login_button.png',
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: 300,
+                  height: 45,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade100,
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      textStyle:
+                          const TextStyle(fontSize: 15, fontFamily: 'Poppins'),
+                    ),
+                    onPressed: () => {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const IdPwLoginPage(),
+                        ),
+                      ),
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Icon(Icons.mail_outline, size: 25, color: Colors.black),
+                        SizedBox(width: 70),
+                        Text(
+                          '이메일로 로그인',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
